@@ -12,7 +12,7 @@ const ReportForm = () => {
   const [fileName, setFileName] = useState("");
   const [dropdownData, setDropdownData] = useState({});
   const today = new Date().toISOString().split("T")[0];
-
+  const API_URL = process.env.REACT_APP_API_URL || "http://frontend.local.srifincredit.com:5000";
   useEffect(() => {
     const fetchData = async () => {
       if (!reportType) return;
@@ -20,7 +20,7 @@ const ReportForm = () => {
         const endpoints = ["branches", "regions", "clusters", "areas", "creditAppStatuses", "appStatuses", "employeeStatuses"];
         const responses = await Promise.all(
           endpoints.map((endpoint) =>
-            fetch(`http://localhost:5000/api/dropdowns/${endpoint}?reportType=${encodeURIComponent(reportType)}`)
+            fetch(`${API_URL}/api/dropdowns/${endpoint}?reportType=${encodeURIComponent(reportType)}`)
           )
         );
 
@@ -78,7 +78,7 @@ const ReportForm = () => {
     setSuccessMessage("");
     setFileName(null);
     try {
-      const response = await fetch("http://localhost:5000/api/reports", {
+      const response = await fetch(`${API_URL}/api/reports`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ reportType, ...formState, ...customInputs }),
@@ -115,7 +115,7 @@ const ReportForm = () => {
       link.click();
       document.body.removeChild(link);
     } else {
-      window.open(`http://localhost:5000/api/reports/download?file=${fileName}`, "_blank");
+      window.open(`${API_URL}/api/reports/download?file=${fileName}`, "_blank");
     }
   };
 
