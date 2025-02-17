@@ -33,6 +33,7 @@ const ReportForm = () => {
             return await res.json();
           })
         );
+     
 
         console.log("Fetched Dropdown Data:", data);
 
@@ -121,10 +122,10 @@ const ReportForm = () => {
   const reportFields = {
     "Fore Closure Report": ["branches", "regions"],
     "Borrower Master Report": ["branches", "clusters"],
-    "Credit Report": ["branches", "creditAppStatus", "appStartDate", "appEndDate"],
-    "Loan Application Report": ["branches", "appStatus", "appStartDate", "appEndDate"],
+    "Credit Report": ["branches", "creditAppStatuses", "appStartDate", "appEndDate"],
+    "Loan Application Report": ["branches", "appStatuses", "appStartDate", "appEndDate"],
     "Employee Master Report": ["branches", "areas", "regions", "clusters", "employeeStatuses"],
-    "Death Report": ["clusters", "branches", "regions", "appStartDate", "appEndDate"],
+    "Death Report": ["clusters", "branches", "regions"],
   };
 
   const fieldLabels = {
@@ -173,7 +174,7 @@ const ReportForm = () => {
               ) : (
                 <TextField
                   label={fieldLabels[field] || field}
-                  select
+                  select type="text"
                   fullWidth
                   InputLabelProps={{ shrink: true }}
                   value={formState[field] || ""}
@@ -209,5 +210,3 @@ const ReportForm = () => {
 };
 
 export default ReportForm;
-
-
