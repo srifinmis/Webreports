@@ -1,50 +1,63 @@
 import React from 'react';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import Navbar from './components/Navbar';
-import TopBar from './components/Topbar';
-import ReportForm from './components/ReportForm';
-import SpecificReportPage from './components/Specificpage';
+import Topbar from './components/Topbar';
+import Reports from './components/Reports';
+import Reupload from './components/Reupload';
+import ReportForm from './components/ReportForm'; 
 
-function App() {
+const App = () => {
   return (
     <Router>
-      <div
-        style={{
-          display: 'flex',
-          flexDirection: 'column',
-          height: '100vh',
-          overflow: 'hidden',
-        }}
-      >
-        {/* Fixed Top Section */}
-        <TopBar />
-
-        <div style={{ display: 'flex', flex: 1 }}>
-          {/* Sidebar */}
-          <div style={{ flexShrink: 0, width: '260px' }}>
-            <Navbar />
+      <div style={{ display: 'flex', minHeight: '100vh' }}>
+        
+        {/* Fixed Sidebar */}
+        <div style={{
+          position: 'fixed', 
+          top: 0, 
+          left: 0, 
+          bottom: 0, 
+          width: '160px', 
+          backgroundColor: '#fff', 
+          zIndex: 100
+        }}>
+          <Navbar />
+        </div>
+        
+        {/* Main Content Section */}
+        <div style={{
+          marginLeft: '180px', 
+          paddingTop: '60px', 
+          flexGrow: 1
+        }}>
+          
+          {/* Fixed Topbar */}
+          <div style={{
+            position: 'fixed',
+            top: 0,
+            left: '180px',
+            right: 0,
+            backgroundColor: '#fff',
+            zIndex: 101,
+            width: 'calc(100% - 260px)', 
+            height: '60px'
+          }}>
+            <Topbar />
           </div>
 
-          {/* Main Content */}
-          <div
-            style={{
-              flex: 1,
-              backgroundColor: '#f9f9f9',
-              boxShadow: 'inset 0 0 25px rgba(0, 0, 0, 0.6)',
-              overflowY: 'auto',
-              height: 'calc(100vh - 50px)',
-              padding: '20px', // Added padding for better spacing
-            }}
-          >
+          {/* Page Content */}
+          <div style={{ marginTop: '60px', padding: '20px' }}>
             <Routes>
-              <Route path="/" element={<ReportForm />} />
-              <Route path="/reports/:reportType" element={<SpecificReportPage />} />
+              <Route path="/components/ReportForm" element={<ReportForm />} />
+              <Route path="/components/Reports" element={<Reports />} />
+              <Route path="/components/Reupload" element={<Reupload />} /> 
             </Routes>
           </div>
         </div>
       </div>
     </Router>
   );
-}
+};
 
 export default App;
+

@@ -26,7 +26,7 @@ const Topbar = () => {
           display: "flex",
           alignItems: "center",
           justifyContent: "center",
-          marginRight: "70px", // Space between the logo and the text
+          marginRight: "40px", // Space between the logo and the text
         }}
       >
         <img

@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import { Box, Grid, TextField, Button, Typography, Alert, Autocomplete, MenuItem } from "@mui/material"; // Combined import
 // import { MenuItem } from "@mui/material"; // Remove this duplicate import
 import InfinityLoader from "./InfinityLoader";
+import { APIURL } from '../configuration';
 
 const ReportForm = () => {
   const [reportType, setReportType] = useState("");
@@ -22,7 +23,7 @@ const ReportForm = () => {
         const endpoints = ["branches", "regions", "clusters", "areas", "creditAppStatuses", "appStatuses", "employeeStatuses"];
         const responses = await Promise.all(
           endpoints.map((endpoint) =>
-            fetch(`http://localhost:5000/api/dropdowns/${endpoint}?reportType=${encodeURIComponent(reportType)}`)
+            fetch(`${APIURL}/api/dropdowns/${endpoint}?reportType=${encodeURIComponent(reportType)}`)
           )
         );
 
