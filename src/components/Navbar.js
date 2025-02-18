@@ -1,89 +1,98 @@
 import React, { useState } from "react";
-import { Link } from "react-router-dom";
-import { Drawer, Box, Divider, Button } from "@mui/material";
-import { useTheme } from "@mui/material/styles";
-
-// Icon imports
+import { Drawer, Button, Box, Divider } from "@mui/material";
+import BusinessIcon from "@mui/icons-material/Business";
 import ReportIcon from "@mui/icons-material/Assessment";
+import { useTheme } from "@mui/material/styles";
+import { useNavigate, Link } from "react-router-dom";
 
 const Navbar = () => {
-  const [activeLink, setActiveLink] = useState(null); // Track active link for color change
-  const theme = useTheme(); // Get the current theme for color reference
+  const [showCICMenu, setShowCICMenu] = useState(false);
+  const theme = useTheme();
+  const navigate = useNavigate();
+  const [activeLink, setActiveLink] = useState("");
 
-  const handleLinkClick = (link) => {
-    setActiveLink(link); // Set active link
+  const handleNavigate = (path) => {
+    navigate(path);
+    setActiveLink(path);
   };
 
   return (
     <Box sx={{ display: "flex" }}>
-      {/* Sidebar */}
       <Drawer
         variant="permanent"
         sx={{
-          width: 240,
+          width: 180,
           flexShrink: 0,
-          display: "flex",
-          flexDirection: "column",
           "& .MuiDrawer-paper": {
-            width: 260,
-            marginTop: "50px",
+            width: 180,
             boxSizing: "border-box",
-            backgroundColor: "#000957", // Sidebar background color
+            backgroundColor: "#000957",
             color: theme.palette.common.white,
-            overflowY: "auto", // Enable scrolling
-            scrollbarWidth: "thin", // Thin scrollbar (for Firefox)
-            msOverflowStyle: "none", // For IE/Edge, hide arrows
-            "&::-webkit-scrollbar": {
-              width: "12px", // Scrollbar width
-            },
-            "&::-webkit-scrollbar-track": {
-              background: theme.palette.background.default,
-            },
-            "&::-webkit-scrollbar-thumb": {
-              backgroundColor: theme.palette.secondary.main,
-              borderRadius: "10px",
-            },
+            overflowY: "auto",
           },
         }}
       >
         <Divider sx={{ backgroundColor: theme.palette.divider }} />
+        <Box sx={{ marginTop: "70px" }} />
 
-        {/* Single Navigation Item */}
-        <Box sx={{ marginTop: "16px", paddingLeft: "16px" }}>
+        <Box sx={{ paddingX: 2, marginY: 1 }}>
           <Button
             color="inherit"
             fullWidth
             startIcon={<ReportIcon />}
-            onClick={() => handleLinkClick("/Reports")}
+            onClick={() => handleNavigate("/components/ReportForm")}
             sx={{
               justifyContent: "flex-start",
-              color: activeLink === "/Reports" ? "#79D7BE" : "white", // Change text color when active
-              "&:hover": {
-                color: "#79D7BE",
-              },
+              color: activeLink === "/components/ReportForm" ? "#79D7BE" : "white",
+              "&:hover": { color: "#79D7BE" },
             }}
-            component={Link}
-            to="/Reports"
           >
             Reports
           </Button>
         </Box>
+
+        <Box sx={{ paddingX: 2, marginY: 1 }}>
+          <Button
+            color="inherit"
+            fullWidth
+            startIcon={<BusinessIcon />}
+            onClick={() => setShowCICMenu(!showCICMenu)}
+            sx={{
+              justifyContent: "flex-start",
+              color: "white",
+              "&:hover": { color: "#79D7BE" },
+            }}
+          >
+            CIC
+          </Button>
+        </Box>
+
+        {showCICMenu && (
+          <Box sx={{ paddingLeft: 4 }}>
+            <Button
+              color="inherit"
+              fullWidth
+              onClick={() => handleNavigate("/components/Reports")}
+              sx={{ justifyContent: "flex-start", color: "white", "&:hover": { color: "#79D7BE" } }}
+            >
+              Reports
+            </Button>
+            <Button
+              color="inherit"
+              fullWidth
+              onClick={() => handleNavigate("/components/Reupload")}
+              sx={{ justifyContent: "flex-start", color: "white", "&:hover": { color: "#79D7BE" } }}
+            >
+              Reupload
+            </Button>
+          </Box>
+        )}
       </Drawer>
 
-      {/* Main Content Area */}
-      <Box
-        component="main"
-        sx={{
-          flexGrow: 1,
-          bgcolor: "background.default",
-          padding: "16px",
-        }}
-      >
-        {/* Your main content goes here */}
-        <h1>Reports Page</h1>
-      </Box>
+      <Box component="main" sx={{ flexGrow: 1, bgcolor: "background.default", p: 2 }}></Box>
     </Box>
   );
 };
 
 export default Navbar;
+
