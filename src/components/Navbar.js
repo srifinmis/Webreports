@@ -3,9 +3,10 @@ import { Drawer, Button, Box, Divider } from "@mui/material";
 import BusinessIcon from "@mui/icons-material/Business";
 import ReportIcon from "@mui/icons-material/Assessment";
 import { useTheme } from "@mui/material/styles";
-import { useNavigate, Link } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 
 const Navbar = () => {
+  const [showReportsMenu, setShowReportsMenu] = useState(false);
   const [showCICMenu, setShowCICMenu] = useState(false);
   const theme = useTheme();
   const navigate = useNavigate();
@@ -21,10 +22,10 @@ const Navbar = () => {
       <Drawer
         variant="permanent"
         sx={{
-          width: 180,
+          width: 220, // Slightly increased width for better spacing
           flexShrink: 0,
           "& .MuiDrawer-paper": {
-            width: 180,
+            width: 200,
             boxSizing: "border-box",
             backgroundColor: "#000957",
             color: theme.palette.common.white,
@@ -35,22 +36,60 @@ const Navbar = () => {
         <Divider sx={{ backgroundColor: theme.palette.divider }} />
         <Box sx={{ marginTop: "70px" }} />
 
+        {/* Reports Section */}
         <Box sx={{ paddingX: 2, marginY: 1 }}>
           <Button
             color="inherit"
             fullWidth
             startIcon={<ReportIcon />}
-            onClick={() => handleNavigate("/components/ReportForm")}
+            onClick={() => setShowReportsMenu(!showReportsMenu)}
             sx={{
               justifyContent: "flex-start",
-              color: activeLink === "/components/ReportForm" ? "#79D7BE" : "white",
+              color: "white",
               "&:hover": { color: "#79D7BE" },
+              whiteSpace: "nowrap",
             }}
           >
             Reports
           </Button>
         </Box>
 
+        {showReportsMenu && (
+          <Box sx={{ paddingLeft: 3 }}>
+            <Button
+              color="inherit"
+              fullWidth
+              onClick={() => handleNavigate("/components/LoanDetailsReport")}
+              sx={{
+                justifyContent: "flex-start",
+                color: activeLink === "/components/LoanDetailsReport" ? "#79D7BE" : "white",
+                "&:hover": { color: "#79D7BE" },
+                whiteSpace: "nowrap",
+                paddingX: 1,
+              }}
+            >
+              Loan Details Report
+            </Button>
+            <Button
+              color="inherit"
+              fullWidth
+              onClick={() => handleNavigate("/components/LUCReport")}
+              sx={{
+                justifyContent: "flex-start",
+                color: activeLink === "/components/LUCReport" ? "#79D7BE" : "white",
+                "&:hover": { color: "#79D7BE" },
+                whiteSpace: "nowrap",
+                paddingX: 1,
+              }}
+            >
+              LUC Report
+            </Button>
+          </Box>
+        )}
+
+        <Divider sx={{ backgroundColor: theme.palette.divider, marginY: 1 }} />
+
+        {/* CIC Section */}
         <Box sx={{ paddingX: 2, marginY: 1 }}>
           <Button
             color="inherit"
@@ -61,6 +100,7 @@ const Navbar = () => {
               justifyContent: "flex-start",
               color: "white",
               "&:hover": { color: "#79D7BE" },
+              whiteSpace: "nowrap",
             }}
           >
             CIC
@@ -68,12 +108,18 @@ const Navbar = () => {
         </Box>
 
         {showCICMenu && (
-          <Box sx={{ paddingLeft: 4 }}>
+          <Box sx={{ paddingLeft: 3 }}>
             <Button
               color="inherit"
               fullWidth
               onClick={() => handleNavigate("/components/Reports")}
-              sx={{ justifyContent: "flex-start", color: "white", "&:hover": { color: "#79D7BE" } }}
+              sx={{
+                justifyContent: "flex-start",
+                color: activeLink === "/components/Reports" ? "#79D7BE" : "white",
+                "&:hover": { color: "#79D7BE" },
+                whiteSpace: "nowrap",
+                paddingX: 1,
+              }}
             >
               Reports
             </Button>
@@ -81,7 +127,13 @@ const Navbar = () => {
               color="inherit"
               fullWidth
               onClick={() => handleNavigate("/components/Reupload")}
-              sx={{ justifyContent: "flex-start", color: "white", "&:hover": { color: "#79D7BE" } }}
+              sx={{
+                justifyContent: "flex-start",
+                color: activeLink === "/components/Reupload" ? "#79D7BE" : "white",
+                "&:hover": { color: "#79D7BE" },
+                whiteSpace: "nowrap",
+                paddingX: 1,
+              }}
             >
               Reupload
             </Button>
@@ -95,4 +147,3 @@ const Navbar = () => {
 };
 
 export default Navbar;
-

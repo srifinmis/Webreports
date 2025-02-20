@@ -5,6 +5,8 @@ import Topbar from './components/Topbar';
 import Reports from './components/Reports';
 import Reupload from './components/Reupload';
 import ReportForm from './components/ReportForm'; 
+import LoanDetailsReport from './components/LoanDetailsReport';
+import Lucreport from './components/LUCReport'
 
 const App = () => {
   return (
@@ -26,7 +28,7 @@ const App = () => {
         
         {/* Main Content Section */}
         <div style={{
-          marginLeft: '180px', 
+          marginLeft: '220px', 
           paddingTop: '60px', 
           flexGrow: 1
         }}>
@@ -35,7 +37,7 @@ const App = () => {
           <div style={{
             position: 'fixed',
             top: 0,
-            left: '180px',
+            left: '220px',
             right: 0,
             backgroundColor: '#fff',
             zIndex: 101,
@@ -46,11 +48,14 @@ const App = () => {
           </div>
 
           {/* Page Content */}
-          <div style={{ marginTop: '60px', padding: '20px' }}>
+          <div style={{ marginTop: '-40px', padding: '20px' }}>
             <Routes>
               <Route path="/components/ReportForm" element={<ReportForm />} />
               <Route path="/components/Reports" element={<Reports />} />
-              <Route path="/components/Reupload" element={<Reupload />} /> 
+              <Route path="/components/Reupload" element={<Reupload />} />
+              <Route path="/components/LoanDetailsReport" element={<LoanDetailsReport />} />
+              <Route path="/components/LUCReport" element={<Lucreport />} /> 
+
             </Routes>
           </div>
         </div>

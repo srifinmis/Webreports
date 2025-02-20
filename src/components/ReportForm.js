@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from "react";
 import { Box, Grid, TextField, Button, Typography, Alert, Autocomplete, MenuItem } from "@mui/material"; // Combined import
-// import { MenuItem } from "@mui/material"; // Remove this duplicate import
 import InfinityLoader from "./InfinityLoader";
 import { APIURL } from '../configuration';
 

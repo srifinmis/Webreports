@@ -18,7 +18,7 @@ const Reports = () => {
   const fetchHeaderAndTrailer = async (reportType) => {
     try {
       const response = await fetch(`${APIURL}/get-report-header-trailer`, {
-        method: 'POST',
+        method: 'POST',                       
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ reportType }),
       });
