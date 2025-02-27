@@ -22,7 +22,7 @@ const Navbar = () => {
       <Drawer
         variant="permanent"
         sx={{
-          width: 220, // Slightly increased width for better spacing
+          width: 220,
           flexShrink: 0,
           "& .MuiDrawer-paper": {
             width: 200,
@@ -84,6 +84,91 @@ const Navbar = () => {
             >
               LUC Report
             </Button>
+            <Button
+              color="inherit"
+              fullWidth
+              onClick={() => handleNavigate("/components/ForeClosureReport")}
+              sx={{
+                justifyContent: "flex-start",
+                color: activeLink === "/components/ForeClosureReport" ? "#79D7BE" : "white",
+                "&:hover": { color: "#79D7BE" },
+                whiteSpace: "nowrap",
+                paddingX: 1,
+              }}
+            >
+              Fore Closure Report
+            </Button>
+            <Button
+              color="inherit"
+              fullWidth
+              onClick={() => handleNavigate("/components/BorrowMasterReport")}
+              sx={{
+                justifyContent: "flex-start",
+                color: activeLink === "/components/BorrowMasterReport" ? "#79D7BE" : "white",
+                "&:hover": { color: "#79D7BE" },
+                whiteSpace: "nowrap",
+                paddingX: 1,
+              }}
+            >
+              Borrower Master Report 
+            </Button>
+            <Button
+              color="inherit"
+              fullWidth
+              onClick={() => handleNavigate("/components/CreditReport")}
+              sx={{
+                justifyContent: "flex-start",
+                color: activeLink === "/components/CreditReport" ? "#79D7BE" : "white",
+                "&:hover": { color: "#79D7BE" },
+                whiteSpace: "nowrap",
+                paddingX: 1,
+              }}
+            >
+              Credit Report 
+            </Button>
+            <Button
+              color="inherit"
+              fullWidth
+              onClick={() => handleNavigate("/components/LoanApplicationReport")}
+              sx={{
+                justifyContent: "flex-start",
+                color: activeLink === "/components/LoanApplicationReport" ? "#79D7BE" : "white",
+                "&:hover": { color: "#79D7BE" },
+                whiteSpace: "nowrap",
+                paddingX: 1,
+              }}
+            >
+               Loan Application Report
+            </Button>
+            <Button
+              color="inherit"
+              fullWidth
+              onClick={() => handleNavigate("/components/EmployeeMasterReport")}
+              sx={{
+                justifyContent: "flex-start",
+                color: activeLink === "/components/EmployeeMasterReport" ? "#79D7BE" : "white",
+                "&:hover": { color: "#79D7BE" },
+                whiteSpace: "nowrap",
+                paddingX: 1,
+              }}
+            >
+               Employee Master Report 
+            </Button>
+            <Button
+              color="inherit"
+              fullWidth
+              onClick={() => handleNavigate("/components/DeathReport")}
+              sx={{
+                justifyContent: "flex-start",
+                color: activeLink === "/components/DeathReport" ? "#79D7BE" : "white",
+                "&:hover": { color: "#79D7BE" },
+                whiteSpace: "nowrap",
+                paddingX: 1,
+              }}
+            >
+               Death Report 
+            </Button>
+            
           </Box>
         )}
 

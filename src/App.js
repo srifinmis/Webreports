@@ -6,7 +6,14 @@ import Reports from './components/Reports';
 import Reupload from './components/Reupload';
 import ReportForm from './components/ReportForm'; 
 import LoanDetailsReport from './components/LoanDetailsReport';
-import Lucreport from './components/LUCReport'
+import Lucreport from './components/LUCReport';
+import ForeClosureReport from './components/ForeClouserReport';
+import BorrowerMasterReport from './components/BorrowMasterReport';
+import CreditReport from './components/CreditReport';
+import LoanApplicationReport from './components/LoanApplicationReport';
+import EmployeeMasterReport from './components/EmployeeMasterReport';
+import DeathReport from './components/DeathReport';
+
 
 const App = () => {
   return (
@@ -19,7 +26,7 @@ const App = () => {
           top: 0, 
           left: 0, 
           bottom: 0, 
-          width: '160px', 
+          width: '220px', 
           backgroundColor: '#fff', 
           zIndex: 100
         }}>
@@ -55,6 +62,13 @@ const App = () => {
               <Route path="/components/Reupload" element={<Reupload />} />
               <Route path="/components/LoanDetailsReport" element={<LoanDetailsReport />} />
               <Route path="/components/LUCReport" element={<Lucreport />} /> 
+              <Route path="/components/ForeClosureReport" element={<ForeClosureReport />} /> 
+              <Route path="/components/BorrowMasterReport" element={<BorrowerMasterReport />} /> 
+              <Route path="/components/CreditReport" element={<CreditReport />} /> 
+              <Route path="/components/LoanApplicationReport" element={<LoanApplicationReport />} /> 
+              <Route path="/components/EmployeeMasterReport" element={<EmployeeMasterReport />} /> 
+              <Route path="/components/DeathReport" element={<DeathReport />} /> 
+
 
             </Routes>
           </div>
