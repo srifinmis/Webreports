@@ -8,7 +8,6 @@ import { format } from "date-fns";
 
 const CreditReport = () => {
   const today = new Date();
-
   const [branch, setBranch] = useState(null);
   const [creditAppStatus, setCreditAppStatus] = useState(null);
   const [startDate, setStartDate] = useState(new Date("2023-10-01"));
@@ -20,73 +19,51 @@ const CreditReport = () => {
   const [error, setError] = useState("");
 
   useEffect(() => {
-    try {
-      const storedData = sessionStorage.getItem("creditReportDropdownData");
-
-      if (storedData) {
-        const { data, timestamp } = JSON.parse(storedData);
-        const cacheDuration = 24 * 60 * 60 * 1000;
-
-        if (Date.now() - timestamp < cacheDuration) {
-          setDropdownData(data);
-          setLoadingDropdowns(false);
-          return;
-        }
-      }
-    } catch (error) {
-      console.error("Error reading session storage:", error);
-    }
-
     fetchDropdownData();
   }, []);
 
   const fetchDropdownData = async () => {
     try {
-      const response = await fetch(`${APIURL}/api/dropdown-data-creditreport`);
+      const response = await fetch(`${APIURL}/api/creditreport/dropdown-data-creditreport`);
+      if (!response.ok) throw new Error("Failed to fetch dropdown data");
+
       const data = await response.json();
+      console.log("API Response:", data);
 
-      const filterValidEntries = (arr) => arr.filter((item) => item && item !== "value");
-
-      const formattedData = {
-        branches: filterValidEntries(data.branches).map((b) => ({ label: b, id: b })),
-        statuses: filterValidEntries(data.statuses).map((s) => ({ label: s, id: s })),
-      };
-
-      setDropdownData(formattedData);
-      sessionStorage.setItem("creditReportDropdownData", JSON.stringify({ data: formattedData, timestamp: Date.now() }));
+      setDropdownData({
+        branches: Array.isArray(data.branches) ? data.branches.map(b => ({ label: b, id: b })) : [],
+        statuses: Array.isArray(data.statuses) ? data.statuses.map(s => ({ label: s, id: s })) : [],
+      });
     } catch (error) {
       console.error("Error fetching dropdown data:", error);
+      setError("Failed to load dropdown options.");
     } finally {
       setLoadingDropdowns(false);
     }
   };
 
   const handleStartDateChange = (newValue) => {
+    setStartDate(newValue);
     if (newValue > endDate) {
       setError("Start Date cannot be greater than End Date.");
     } else {
       setError("");
     }
-    setStartDate(newValue);
   };
 
   const handleEndDateChange = (newValue) => {
+    setEndDate(newValue);
     if (newValue < startDate) {
       setError("End Date cannot be earlier than Start Date.");
     } else {
       setError("");
     }
-    setEndDate(newValue);
   };
 
   const generateExcelReport = async () => {
     setError("");
     if (!branch || !startDate || !endDate) {
       setError("Branch and Apply Date Range are required.");
-      return;
-    }
-    if (startDate > endDate) {
-      setError("Start Date cannot be greater than End Date.");
       return;
     }
 
@@ -101,7 +78,7 @@ const CreditReport = () => {
     };
 
     try {
-      const response = await fetch(`${APIURL}/generate-creditreport`, {
+      const response = await fetch(`${APIURL}/api/creditreport/generate-report`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(reportRequest),
@@ -109,9 +86,8 @@ const CreditReport = () => {
 
       const jsonData = await response.json();
       if (!response.ok) throw new Error(jsonData.message || "No data found to generate report");
-      if (!Array.isArray(jsonData)) throw new Error("Unexpected response format: Expected an array");
 
-      const worksheet = XLSX.utils.json_to_sheet(jsonData);
+      const worksheet = XLSX.utils.json_to_sheet(jsonData.data || []);
       const workbook = XLSX.utils.book_new();
       XLSX.utils.book_append_sheet(workbook, worksheet, "CreditReport");
 
@@ -121,7 +97,7 @@ const CreditReport = () => {
       setDownloadLink(fileURL);
     } catch (error) {
       console.error("Error generating report:", error);
-      setError(error.message || "An error occurred while generating the Excel report.");
+      setError(error.message || "An error occurred while generating the report.");
     } finally {
       setLoading(false);
     }
@@ -130,45 +106,49 @@ const CreditReport = () => {
   return (
     <LocalizationProvider dateAdapter={AdapterDateFns}>
       <Box sx={{ maxWidth: 600, margin: "20px auto", padding: 3, border: "1px solid #ccc", borderRadius: 2, boxShadow: 3 }}>
-        <Typography variant="h6" sx={{ textAlign: "center", marginBottom: "20px", borderBottom: "2px solid #0056b3", paddingBottom: "10px" }}>
-          Credit Report
-        </Typography>
+        <Typography variant="h6" sx={{ textAlign: "center", marginBottom: "20px" }}>Credit Report</Typography>
+        {error && <Typography color="error" sx={{ textAlign: "center" }}>{error}</Typography>}
 
         <Grid container spacing={2}>
           <Grid item xs={12}>
             <Autocomplete
               options={dropdownData.branches}
-              loading={loadingDropdowns}
-              getOptionLabel={(option) => option.label || ""}
+              getOptionLabel={(option) => option.label}
+              value={branch}
               onChange={(event, newValue) => setBranch(newValue)}
-              renderInput={(params) => <TextField {...params} label="Branch (Required)" fullWidth required />}
+              loading={loadingDropdowns}
+              renderInput={(params) => <TextField {...params} label="Branch" variant="outlined" fullWidth required />}
             />
           </Grid>
 
           <Grid item xs={12}>
             <Autocomplete
               options={dropdownData.statuses}
-              loading={loadingDropdowns}
-              getOptionLabel={(option) => option.label || ""}
+              getOptionLabel={(option) => option.label}
+              value={creditAppStatus}
               onChange={(event, newValue) => setCreditAppStatus(newValue)}
-              renderInput={(params) => <TextField {...params} label="Credit App Status" fullWidth />}
+              loading={loadingDropdowns}
+              renderInput={(params) => <TextField {...params} label="Credit App Status" variant="outlined" fullWidth />}
             />
           </Grid>
 
           <Grid item xs={6}>
-            <DatePicker label="Application Start Date (Required)" value={startDate} onChange={handleStartDateChange} maxDate={today} />
+            <DatePicker label="Start Date" value={startDate} onChange={handleStartDateChange} renderInput={(params) => <TextField {...params} fullWidth />} />
           </Grid>
-
           <Grid item xs={6}>
-            <DatePicker label="Application End Date (Required)" value={endDate} onChange={handleEndDateChange} maxDate={today} />
+            <DatePicker label="End Date" value={endDate} onChange={handleEndDateChange} renderInput={(params) => <TextField {...params} fullWidth />} />
           </Grid>
         </Grid>
-
-        {error && <Typography color="error" sx={{ marginTop: 2, textAlign: "center" }}>{error}</Typography>}
 
         <Button variant="contained" onClick={generateExcelReport} disabled={loading} sx={{ marginTop: 3, width: "100%" }}>
           {loading ? <CircularProgress size={24} /> : "Generate Report"}
         </Button>
+
+        {downloadLink && (
+          <Typography textAlign="center" sx={{ marginTop: 2 }}>
+            <a href={downloadLink} download="CreditReport.xlsx">Download Report</a>
+          </Typography>
+        )}
       </Box>
     </LocalizationProvider>
   );

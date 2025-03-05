@@ -8,6 +8,7 @@ const EmployeeMasterReport = () => {
   const [area, setArea] = useState(null);
   const [region, setRegion] = useState(null);
   const [cluster, setCluster] = useState(null);
+  const [employeeStatus, setEmployeeStatus] = useState([]); // Added state for employeeStatus
   const [loadingDropdowns, setLoadingDropdowns] = useState(true);
   const [downloadLink, setDownloadLink] = useState(null);
   const [loading, setLoading] = useState(false);
@@ -17,6 +18,7 @@ const EmployeeMasterReport = () => {
     areas: [],
     regions: [],
     clusters: [],
+    employeeStatuses: [], // You may want to get this from the backend or define it
     branchMappings: {},
   });
 
@@ -24,7 +26,7 @@ const EmployeeMasterReport = () => {
     const fetchDropdownData = async () => {
       const cacheKey = "employeeMasterDropdownData";
       const cachedData = sessionStorage.getItem(cacheKey);
-      const cacheExpiration = 24 * 60 * 60 * 1000; // 30 minutes in milliseconds
+      const cacheExpiration = 1000 * 60 * 30; // 30 minutes in milliseconds
 
       if (cachedData) {
         const { timestamp, data } = JSON.parse(cachedData);
@@ -36,7 +38,7 @@ const EmployeeMasterReport = () => {
       }
 
       try {
-        const response = await fetch(`${APIURL}/api/dropdown-data-employeemaster`);
+        const response = await fetch(`${APIURL}/api/employeemaster/dropdown-data`);
         if (!response.ok) throw new Error(`API request failed with status ${response.status}`);
 
         const data = await response.json();
@@ -50,6 +52,7 @@ const EmployeeMasterReport = () => {
           areas: filterValidEntries(data.areas || [], "AreaID_Name"),
           regions: filterValidEntries(data.regions || [], "RegionID_Name"),
           clusters: filterValidEntries(data.clusters || [], "ClusterID_Name"),
+          employeeStatuses: filterValidEntries(data.employeeStatuses || [], "Employee_Status"), // Assuming employee status is fetched
           branchMappings: data.branchMappings || {},
         };
 
@@ -67,16 +70,12 @@ const EmployeeMasterReport = () => {
     fetchDropdownData();
   }, []);
 
-
-
-
   const handleClusterChange = (event, newValue) => {
     setCluster(newValue);
     setRegion(null);
     setArea(null);
     setBranch(null);
   };
-
 
   const handleRegionChange = (event, newValue) => {
     setRegion(newValue);
@@ -116,8 +115,12 @@ const EmployeeMasterReport = () => {
     }
   };
 
+  const handleEmployeeStatusChange = (event, newValue) => {
+    setEmployeeStatus(newValue);
+  };
+
   const filteredRegions = useMemo(() => {
-    if (!cluster) return dropdownData.regions;
+    if (!dropdownData.regions || !cluster) return dropdownData.regions || [];
     return dropdownData.regions.filter((region) =>
       Object.values(dropdownData.branchMappings).some(
         (branch) => branch.cluster === cluster.label && branch.region === region.label
@@ -126,7 +129,7 @@ const EmployeeMasterReport = () => {
   }, [cluster, dropdownData.regions, dropdownData.branchMappings]);
 
   const filteredAreas = useMemo(() => {
-    if (!region) return dropdownData.areas;
+    if (!dropdownData.areas || !region) return dropdownData.areas || [];
     return dropdownData.areas.filter((area) =>
       Object.values(dropdownData.branchMappings).some(
         (branch) => branch.region === region.label && branch.area === area.label
@@ -135,6 +138,7 @@ const EmployeeMasterReport = () => {
   }, [region, dropdownData.areas, dropdownData.branchMappings]);
 
   const filteredBranches = useMemo(() => {
+    if (!dropdownData.branches) return [];
     return dropdownData.branches.filter((branch) =>
       Object.entries(dropdownData.branchMappings).some(([branchName, details]) => {
         return (
@@ -157,18 +161,25 @@ const EmployeeMasterReport = () => {
         areaID: area ? area.label : null,
         regionID: region ? region.label : null,
         clusterID: cluster ? cluster.label : null,
-        employeeStatus: [],
+        employeeStatus: employeeStatus.length > 0 ? employeeStatus.map((status) => status.label) : [],
       };
 
-      console.log("Sending request to API with body:", requestBody);
+      console.log("Sending request to API with body:", requestBody); // Log request body for debugging
 
-      const response = await fetch(`${APIURL}/api/generate-employee-master-report`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(requestBody),
-      });
+      const timeoutPromise = new Promise((_, reject) =>
+        setTimeout(() => reject(new Error("Request timed out")), 60000) // 60 seconds timeout
+      );
 
-      console.log("API Response Status:", response.status);
+      const response = await Promise.race([
+        fetch(`${APIURL}/api/employeemaster/generate`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(requestBody),
+        }),
+        timeoutPromise,
+      ]);
+
+      console.log("API Response Status:", response.status); // Log status to ensure API call is successful
 
       if (!response.ok) {
         const errorText = await response.text();
@@ -177,71 +188,124 @@ const EmployeeMasterReport = () => {
       }
 
       const jsonData = await response.json();
-      console.log("API Response Data:", jsonData);
+      console.log("API Response Data:", jsonData); // Log the data for debugging
 
-      if (!jsonData || !Array.isArray(jsonData) || jsonData.length === 0) {
+      // Check if the response contains valid data
+      if (!jsonData || !jsonData.data || !Array.isArray(jsonData.data) || jsonData.data.length === 0) {
         alert("No data available for the selected filters.");
-        setLoading(false);
         return;
       }
 
-      const worksheet = XLSX.utils.json_to_sheet(jsonData);
-      const workbook = XLSX.utils.book_new();
-      XLSX.utils.book_append_sheet(workbook, worksheet, "EmployeeMasterReport");
+      // If valid data is present
+      const ws = XLSX.utils.json_to_sheet(jsonData.data); // Use 'data' from the response object
+      const wb = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(wb, ws, "EmployeeMasterReport");
 
-      const excelBuffer = XLSX.write(workbook, { bookType: "xlsx", type: "array" });
-      const blob = new Blob([excelBuffer], { type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" });
-      const fileURL = URL.createObjectURL(blob);
-      setDownloadLink(fileURL);
+      // File name format: Employee_Master_Report_YYYY-MM-DD_HH-mm-ss.xlsx
+      const fileName = `Employee_Master_Report_${new Date().toLocaleString().replace(/[:]/g, '-')}.xlsx`;
+      const excelBuffer = XLSX.write(wb, { bookType: "xlsx", type: "array" });
+      const blob = new Blob([excelBuffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+      const fileLink = URL.createObjectURL(blob);
+
+      setDownloadLink(fileLink); // Set the download link for the Excel file
     } catch (error) {
       console.error("Error generating report:", error);
-      alert(`Error generating report: ${error.message}`);
+      alert("There was an error generating the report. Please try again.");
     } finally {
-      setLoading(false);
+      setLoading(false); // Ensure loading state is reset regardless of success or error
     }
   };
 
   return (
-    <Box sx={{ maxWidth: 600, margin: '20px auto', padding: 3, border: '1px solid #ccc', borderRadius: 2, boxShadow: 3 }}>
-      <Typography variant="h6" sx={{
-        color: '#0056b3', fontWeight: '600', fontSize: '20px', marginBottom: '20px', textAlign: 'center',
-        textTransform: 'uppercase', letterSpacing: '1px', borderBottom: '2px solid #0056b3', paddingBottom: '10px'
-      }}>
+    <Box sx={{ boxShadow: 3, padding: 3, borderRadius: 2, maxWidth: 750, margin: "0 auto", marginTop: "64px" }}>
+      <Typography variant="h4" sx={{ borderBottom: '3px solid blue', paddingBottom: 1, marginBottom: 2 }}>
         Employee Master Report
       </Typography>
 
       <Grid container spacing={2}>
-
-        <Grid item xs={12}>
-          <Autocomplete options={filteredBranches} value={branch} onChange={handleBranchChange}
-            renderInput={(params) => <TextField {...params} label="Branch Name" fullWidth />} />
+        {/* Filters */}
+        <Grid item xs={12} sm={6}>
+          {dropdownData.branches && dropdownData.branches.length > 0 && (
+            <Autocomplete
+              options={filteredBranches}
+              getOptionLabel={(option) => option.label || ""}
+              onChange={handleBranchChange}
+              value={branch || null}
+              loading={loadingDropdowns}
+              renderInput={(params) => <TextField {...params} label="Branch" variant="outlined" />}
+            />
+          )}
+        </Grid>
+        <Grid item xs={12} sm={6}>
+          {dropdownData.areas && dropdownData.areas.length > 0 && (
+            <Autocomplete
+              options={filteredAreas}
+              getOptionLabel={(option) => option.label || ""}
+              onChange={handleAreaChange}
+              value={area || null}
+              loading={loadingDropdowns}
+              renderInput={(params) => <TextField {...params} label="Area" variant="outlined" />}
+            />
+          )}
         </Grid>
 
-        <Grid item xs={12}>
-          <Autocomplete options={dropdownData.clusters} value={cluster} onChange={handleClusterChange}
-            renderInput={(params) => <TextField {...params} label="Cluster Name" fullWidth />} />
+        <Grid item xs={12} sm={6}>
+          {dropdownData.regions && dropdownData.regions.length > 0 && (
+            <Autocomplete
+              options={filteredRegions}
+              getOptionLabel={(option) => option.label || ""}
+              onChange={handleRegionChange}
+              value={region || null}
+              loading={loadingDropdowns}
+              renderInput={(params) => <TextField {...params} label="Region" variant="outlined" />}
+            />
+          )}
+        </Grid>
+        <Grid item xs={12} sm={6}>
+          {dropdownData.clusters && dropdownData.clusters.length > 0 && (
+            <Autocomplete
+              options={dropdownData.clusters}
+              getOptionLabel={(option) => option.label || ""}
+              onChange={handleClusterChange}
+              value={cluster || null}
+              loading={loadingDropdowns}
+              renderInput={(params) => <TextField {...params} label="Cluster" variant="outlined" />}
+            />
+          )}
         </Grid>
 
+        {/* Employee Status Dropdown */}
         <Grid item xs={12}>
-          <Autocomplete options={filteredRegions} value={region} onChange={handleRegionChange}
-            renderInput={(params) => <TextField {...params} label="Region Name" fullWidth />} />
+          {dropdownData.employeeStatuses && dropdownData.employeeStatuses.length > 0 && (
+            <Autocomplete
+              multiple
+              options={dropdownData.employeeStatuses}
+              getOptionLabel={(option) => option.label || ""}
+              value={employeeStatus}
+              onChange={handleEmployeeStatusChange}
+              loading={loadingDropdowns}
+              renderInput={(params) => <TextField {...params} label="Employee Status" variant="outlined" />}
+            />
+          )}
         </Grid>
-        <Grid item xs={12}>
-          <Autocomplete options={filteredAreas} value={area} onChange={handleAreaChange}
-            renderInput={(params) => <TextField {...params} label="Area Name" fullWidth />} />
-        </Grid>
-
       </Grid>
 
-      <Button variant="contained" onClick={generateExcelReport} disabled={loading} sx={{ mt: 3, display: "block", mx: "auto" }}>
-        {loading ? <CircularProgress size={24} /> : "Generate Report"}
-      </Button>
+      <Box marginTop={2}>
+        <Button onClick={generateExcelReport} disabled={loading} variant="contained">
+          {loading ? <CircularProgress size={24} /> : "Generate Report"}
+        </Button>
 
-      {downloadLink && (
-        <Typography variant="body2" sx={{ marginTop: '20px', textAlign: 'center' }}>
-          Your Excel report is ready! <a href={downloadLink} download="EmployeerMasterReport.xlsx">Click here to download</a>
-        </Typography>
-      )}
+        {downloadLink && (
+          <Button
+            variant="contained"
+            color="secondary"
+            onClick={() => window.location.href = downloadLink}
+            style={{ marginLeft: "16px" }}
+          >
+            Download Excel
+          </Button>
+        )}
+      </Box>
     </Box>
   );
 };

@@ -7,7 +7,7 @@ import { APIURL } from "../configuration";
 import dayjs from "dayjs";
 
 const CACHE_KEY = "dropdownDataCache";
-const CACHE_DURATION = 24 * 60 * 60 * 1000; // 24 hours
+const CACHE_DURATION =  1000; // 24 hours
 
 const LoanApplicationReport = () => {
   const DEFAULT_START_DATE = dayjs("2023-10-01");
@@ -70,59 +70,58 @@ const LoanApplicationReport = () => {
       alert("Branch Name and Application Date Range are required");
       return;
     }
-
+  
     if (!validateDates(appDate.start, appDate.end)) {
       return;
     }
-
+  
     setLoading(true);
     setDownloadLink("");
-
+  
     const formattedStartDate = dayjs(appDate.start).format("YYYY-MM-DD");
     const formattedEndDate = dayjs(appDate.end).format("YYYY-MM-DD");
-
+  
     const reportRequest = {
       branchName,
       appStatus,
-      appDate: {
-        start: formattedStartDate,
-        end: formattedEndDate,
-      },
+      startDate: formattedStartDate,
+      endDate: formattedEndDate,
     };
-
+  
     try {
       const response = await fetch(`${APIURL}/generate-loanapplication-report`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(reportRequest),
       });
-
+  
       const jsonData = await response.json();
-      if (!response.ok) throw new Error(jsonData.message || "No data found to generate report");
-      if (!Array.isArray(jsonData) || jsonData.length === 0) {
-        alert("No data available for the selected criteria.");
-        return;
+      console.log("🔍 API Response:", jsonData);
+  
+      if (Array.isArray(jsonData.data)) {
+        const worksheet = XLSX.utils.json_to_sheet(jsonData.data);
+        const sheetData = XLSX.utils.sheet_to_json(worksheet, { header: 1 });
+        const cleanedSheetData = sheetData.map(row => row.slice(1));
+        const newWorksheet = XLSX.utils.aoa_to_sheet(cleanedSheetData);
+  
+        const workbook = XLSX.utils.book_new();
+        XLSX.utils.book_append_sheet(workbook, newWorksheet, "LoanApplicationReport");
+  
+        const excelBuffer = XLSX.write(workbook, { bookType: "xlsx", type: "array" });
+        const blob = new Blob([excelBuffer], { type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" });
+        const fileURL = URL.createObjectURL(blob);
+        setDownloadLink(fileURL);
+      } else {
+        console.error("❌ API Response is not an array:", jsonData.data);
       }
-
-      const worksheet = XLSX.utils.json_to_sheet(jsonData);
-      const sheetData = XLSX.utils.sheet_to_json(worksheet, { header: 1 });
-      const cleanedSheetData = sheetData.map(row => row.slice(1));
-      const newWorksheet = XLSX.utils.aoa_to_sheet(cleanedSheetData);
-
-      const workbook = XLSX.utils.book_new();
-      XLSX.utils.book_append_sheet(workbook, newWorksheet, "LoanApplicationReport");
-
-      const excelBuffer = XLSX.write(workbook, { bookType: "xlsx", type: "array" });
-      const blob = new Blob([excelBuffer], { type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" });
-      const fileURL = URL.createObjectURL(blob);
-      setDownloadLink(fileURL);
     } catch (error) {
-      console.error("Error generating report:", error);
+      console.error("❌ Error generating the Excel report:", error);
       alert(error.message || "An error occurred while generating the Excel report.");
     } finally {
       setLoading(false);
     }
   };
+  
 
   return (
     <LocalizationProvider dateAdapter={AdapterDayjs}>

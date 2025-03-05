@@ -4,7 +4,7 @@ import { Box, Button, TextField, Grid, Typography, CircularProgress, Autocomplet
 import { APIURL } from '../configuration';
 
 const CACHE_KEY = "deathReportDropdownData";
-const CACHE_DURATION = 24 * 60 * 60 * 1000; // 30 minutes
+const CACHE_DURATION =  1000; // 30 minutes
 
 const DeathReport = () => {
   const [branch, setBranch] = useState(null);
@@ -32,7 +32,7 @@ const DeathReport = () => {
       }
 
       try {
-        const response = await fetch(`${APIURL}/api/dropdown-data-deathreport`);
+        const response = await fetch("http://localhost:5000/api/deathreport/dropdown-data")
         if (!response.ok) throw new Error(`Error: ${response.statusText}`);
 
         const data = await response.json();
@@ -129,7 +129,6 @@ const DeathReport = () => {
       setRegion(null);
     }
   };
-
   const generateExcelReport = async () => {
     setLoading(true);
     setDownloadLink('');
@@ -141,22 +140,25 @@ const DeathReport = () => {
     };
 
     try {
-      const response = await fetch(`${APIURL}/generate-deathreport`, {
+      const response = await fetch(`${APIURL}/api/deathreport/generate`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(reportRequest),
       });
 
       const jsonData = await response.json();
+
+      console.log("🔍 Received Response Data:", jsonData);  // Log the response here
+
       if (!response.ok) throw new Error(jsonData.message || 'No data found to generate report');
 
-      if (!Array.isArray(jsonData) || jsonData.length === 0) {
+      if (!Array.isArray(jsonData.data) || jsonData.data.length === 0) {
         throw new Error("No data found.");
       }
 
-      const headers = Object.keys(jsonData[0]).map(key => ({ v: key, t: "s" }));
+      const headers = Object.keys(jsonData.data[0]).map(key => ({ v: key, t: "s" }));
       const worksheet = XLSX.utils.json_to_sheet([headers.map(h => h.v)], { skipHeader: true });
-      XLSX.utils.sheet_add_json(worksheet, jsonData, { origin: "A2", skipHeader: true });
+      XLSX.utils.sheet_add_json(worksheet, jsonData.data, { origin: "A2", skipHeader: true });
 
       const workbook = XLSX.utils.book_new();
       XLSX.utils.book_append_sheet(workbook, worksheet, "DeathReport");
@@ -172,6 +174,7 @@ const DeathReport = () => {
       setLoading(false);
     }
   };
+
 
   return (
     <Box sx={{ maxWidth: 600, margin: '20px auto', padding: 3, border: '1px solid #ccc', borderRadius: 2, boxShadow: 3 }}>
@@ -213,7 +216,6 @@ const DeathReport = () => {
             renderInput={(params) => <TextField {...params} label="Region" variant="outlined" fullWidth />}
           />
         </Grid>
-
 
       </Grid>
 

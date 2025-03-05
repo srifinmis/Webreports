@@ -40,7 +40,7 @@ const LoanDetailsReport = () => {
       try {
         const response = await fetch(`${APIURL}/api/dropdown-data-loan`);
         if (!response.ok) throw new Error(`Error: ${response.statusText}`);
-        
+
         const data = await response.json();
         setDropdownData(data);
       } catch (error) {
@@ -117,6 +117,16 @@ const LoanDetailsReport = () => {
       </Typography>
 
       <Grid container spacing={2} sx={{ marginTop: 2 }}>
+
+        <Grid item xs={12} md={6}>
+          <Autocomplete
+            options={dropdownData.branches}
+            loading={loadingDropdowns}
+            value={branchName}
+            onChange={(event, newValue) => setBranchName(newValue || '')}
+            renderInput={(params) => <TextField {...params} label="Branch Name (Required)" variant="outlined" fullWidth required />}
+          />
+        </Grid>
         {/* Zone & Cluster */}
         <Grid item xs={12} md={6}>
           <Autocomplete
@@ -147,15 +157,7 @@ const LoanDetailsReport = () => {
             renderInput={(params) => <TextField {...params} label="Region Name" variant="outlined" fullWidth />}
           />
         </Grid>
-        <Grid item xs={12} md={6}>
-          <Autocomplete
-            options={dropdownData.branches}
-            loading={loadingDropdowns}
-            value={branchName}
-            onChange={(event, newValue) => setBranchName(newValue || '')}
-            renderInput={(params) => <TextField {...params} label="Branch Name (Required)" variant="outlined" fullWidth required />}
-          />
-        </Grid>
+
 
         {/* Customer ID & Loan Application */}
         <Grid item xs={12} md={6}>
